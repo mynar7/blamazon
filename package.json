@@ -1,0 +1,26 @@
+{
+  "name": "blamazon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "blamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mynar7/blamazon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mynar7/blamazon/issues"
+  },
+  "homepage": "https://github.com/mynar7/blamazon#readme",
+  "dependencies": {
+    "colors": "^1.2.1",
+    "inquirer": "^5.2.0",
+    "mysql": "^2.15.0",
+    "table": "^4.0.3"
+  }
+}
