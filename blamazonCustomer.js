@@ -1,51 +1,23 @@
 const inq = require("inquirer");
 const mysql = require("mysql");
 const colors = require("colors");
-const storeDB = require("./db.js");
-const {table} = require('table');
+const db = require("./db.js");
+const storeDB = new db();
 
 //get credentials
-let con = mysql.createConnection(storeDB);
-
+let con = mysql.createConnection(storeDB.credentials());
 //connect to the db
 con.connect(function(err){
     if (err) throw err;
     console.log("Connected as: " + con.threadId);
-    listProducts(buySomething);
-})
+    storeDB.listProducts(con, buyPrompt, "Buy Something?");
+});
 
-//query for available products, then display them, then prompt to buy something
-function listProducts(callback) {
-    con.query("SELECT * FROM products", function(err, res) {
-        if (err) throw err;
-        displayProducts(res);
-        if(callback) {
-            callback(res);
-        }
-    })//end query
-}//end function
 
-//uses table and colors npm to display data in nice format
-function displayProducts(arr) {
-    let data = [];
-    let headerRow = ["Product ID".cyan, "Name".cyan, "Price".cyan, "Quantity".cyan, "Department".cyan];
-    data.push(headerRow);
-    for(let i = 0; i < arr.length; i++) {
-        let row = [
-            arr[i].item_id,
-            arr[i].product_name .yellow,
-            arr[i].price,
-            arr[i].stock_quantity,
-            arr[i].department_name
-        ];
-        data.push(row);
-    }
-    let output = table(data);
-    console.log(output);
-}
 
 //prompt for things to buy
 function buySomething(arr) {
+
     let items = [];
     for(let i = 0; i < arr.length; i++) {
         items.push(arr[i].product_name);
@@ -61,7 +33,7 @@ function buySomething(arr) {
             type: 'input',
             message: 'How many would you like?',
             name: 'quantity',
-            validate: onlyNumbers
+            validate: storeDB.onlyNumbers
         }
     ]).then(function(ans){
         let index = items.indexOf(ans.choice);
@@ -70,23 +42,12 @@ function buySomething(arr) {
     });
 }
 
-//validate function to ensure a string only contains numbers
-function onlyNumbers(str) {
-    if(str.length == 0) return false;
-    for(let i = 0; i < str.length; i++) {
-        if(str.charCodeAt(i) < 48 || str.charCodeAt(i) > 57) {
-            return false;
-        }
-    } //end for loop
-    return true;
-}
-
 function checkStock(arr, name, id, int, buyFx) {
     con.query("SELECT stock_quantity FROM products WHERE item_id = ?", [id], function(err, res) {
         if(err) throw err;
         let currentStock = res[0].stock_quantity;
         if(currentStock < int) {
-            console.log("Not enough stock!");
+            console.log("\nNot enough stock!\n".red);
             buySomething(arr);
         } else {
             buyFx(name, id, int, currentStock);
@@ -104,23 +65,27 @@ function purchaseItem(name, id, quantity, currentStock) {
         }
     ], function(err, res){
         if(err) throw err;
-        listProducts((res) => {
-            console.log("Successfully purchased (" + quantity.green + ") " + name.yellow + "!");
-            inq.prompt([
-                {
-                    type: 'list',
-                    message: "Buy something else?",
-                    choices: ["Yes", "No"],
-                    name: 'choice'
-                }
-            ]).then(function(ans){
-                if(ans.choice == 'Yes') {
-                    buySomething(res);
-                } else {
-                    con.end();
-                    return console.log("Thank you for your business!".rainbow);
-                }
-            })
+        storeDB.listProducts(con, (res) => {
+            console.log("\nSuccessfully purchased (" + quantity.green + ") " + name.yellow + "!\n");
+            buyPrompt(res, "Buy something else?")
         });
+    });
+}
+
+function buyPrompt(res, msg) {
+    inq.prompt([
+        {
+            type: 'list',
+            message: msg,
+            choices: ["Yes", "No"],
+            name: 'choice'
+        }
+    ]).then(function(ans){
+        if(ans.choice == 'Yes') {
+            buySomething(res);
+        } else {
+            con.end();
+            return console.log("\nThank you for your business!\n".rainbow);
+        }
     });
 }
