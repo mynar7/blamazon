@@ -34,7 +34,7 @@ function mainMenu() {
                 addStockPrompt();
                 break;
             case 'Add New Product':
-                newProduct();
+                getDepts(newProduct);
                 break;
             case 'Remove Item from Inventory':
                 removeProduct();
@@ -109,7 +109,19 @@ function updateStock(name, id, oldAmt, addAmt) {
     });
 }
 
-function newProduct() {
+function getDepts(callback) {
+    con.query('SELECT department_name FROM departments', null, function(err, res){
+        if (err) throw err;
+        let deptList = [];
+        for(let i = 0; i < res.length; i++) {
+            deptList.push(res[i].department_name);
+        }
+        deptList.push("Department Not Listed");
+        callback(deptList);
+    });
+}
+
+function newProduct(depts) {
     inq.prompt([
         {
             type: 'list',
@@ -130,46 +142,28 @@ function newProduct() {
             },
             {
                 type: 'input',
-                message: 'Enter Department Name:',
-                name: 'deptName',
-                validate: nonEmptyString
-            },
-            {
-                type: 'input',
                 message: 'Enter Price:',
                 name: 'price',
-                validate: function(name) {
-                    if(name.indexOf('.') == -1) {
-                        return false;
-                    }
-                    let periods = 0;
-                    for(let i = 0; i < name.length; i++){
-                        if(name[i] == '.') {
-                            periods++;
-                        }
-                    }
-                    if(periods != 1) {
-                        return false;
-                    }
-                    let nums = name.split('.')
-                    if(nums[1].length != 2) {
-                        return false;
-                    }
-                    for(let i = 0; i < nums.length; i++) {
-                        if(!storeDB.onlyNumbers(nums[i])){
-                            return false;
-                        }
-                    }
-                    return true;
-                }
+                validate: storeDB.onlyFloats,
+                
             },
             {
                 type: 'input',
                 message: 'Enter Initial Quantity:',
                 name: 'quantity',
                 validate: storeDB.onlyNumbers
+            },
+            {
+                type: 'list',
+                message: 'Choose Department:',
+                name: 'deptName',
+                choices: depts
             }
         ]).then(function(ans2) {
+            if(ans2.deptName == "Department Not Listed") {
+                console.log("\nAdd product cancelled\n".magenta);
+                return mainMenu();
+            }
             con.query("INSERT INTO products SET ?",{
                 product_name: ans2.itemName,
                 department_name: ans2.deptName,

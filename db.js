@@ -69,4 +69,37 @@ db.prototype.onlyNumbers = function (str) {
     return true;
 }
 
+db.prototype.onlyFloats = function(name) {
+    if(name.indexOf('.') == -1) {
+        return false;
+    }
+    let periods = 0;
+    for(let i = 0; i < name.length; i++){
+        if(name[i] == '.') {
+            periods++;
+        }
+    }
+    if(periods != 1) {
+        return false;
+    }
+    let nums = name.split('.')
+    if(nums[1].length != 2) {
+        return false;
+    }
+    for(let i = 0; i < nums.length; i++) {
+        if(!db.prototype.onlyNumbers(nums[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
+db.prototype.nonEmptyString = function (str) {
+    if(str.length == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 module.exports = db;

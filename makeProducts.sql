@@ -42,3 +42,19 @@ VALUES("slightly used Samurai sword", "junk", 50, 1);
 
 INSERT INTO products (product_name, department_name, price, stock_quantity)
 VALUES("some busker's old guitar", "junk", 20, 2);
+
+CREATE TABLE departments (
+    department_id INTEGER(7) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    department_name VARCHAR(30) NOT NULL,
+    over_head_costs DECIMAL(10,2) UNSIGNED NOT NULL,
+    product_sales DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0
+);
+
+INSERT INTO departments (department_name, over_head_costs)
+VALUES("Electronics", 1000);
+
+INSERT INTO departments (department_name, over_head_costs)
+VALUES("junk", 100);
+
+INSERT INTO departments (department_name, over_head_costs)
+VALUES("Musical Instruments", 3000);

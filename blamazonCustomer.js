@@ -37,38 +37,58 @@ function buySomething(arr) {
         }
     ]).then(function(ans){
         let index = items.indexOf(ans.choice);
-        let id = arr[index].item_id;
-        checkStock(arr, ans.choice, id, ans.quantity, purchaseItem);
+        let item = arr[index];
+        checkStock(arr, item, ans.quantity, purchaseItem);
     });
 }
 
-function checkStock(arr, name, id, int, buyFx) {
-    con.query("SELECT stock_quantity FROM products WHERE item_id = ?", [id], function(err, res) {
+function checkStock(itemArr, itemObj, quantity, purchaseFx) {
+    con.query("SELECT stock_quantity FROM products WHERE item_id = ?", [itemObj.item_id], function(err, res) {
         if(err) throw err;
         let currentStock = res[0].stock_quantity;
-        if(currentStock < int) {
+        if(currentStock < quantity) {
             console.log("\nNot enough stock!\n".red);
-            buySomething(arr);
+            buySomething(itemArr);
         } else {
-            buyFx(name, id, int, currentStock);
+            purchaseFx(itemObj, quantity, updateDeptSales);
         }
     });
 }
 
-function purchaseItem(name, id, quantity, currentStock) {
+function updateDeptSales(itemObj, amt) {
+    con.query("SELECT product_sales FROM departments WHERE department_name = ?", 
+    [itemObj.department_name], 
+    function(err, res) {
+        if(err) throw err;
+        let currentSales = parseFloat(res[0].product_sales);
+        let newSales = currentSales + (parseFloat(itemObj.price) * amt);
+        con.query("UPDATE departments SET ? WHERE ?",[
+            {
+                product_sales: newSales
+            },
+            {
+                department_name: itemObj.department_name
+            }
+        ],
+        function(err,res) {
+            if(err) throw err;
+            console.log("\nSuccessfully purchased (" + amt.green + ") " + colors.yellow(itemObj.product_name) + "!\n");
+            storeDB.listProducts(con, buyPrompt, "Buy Something Else?"); 
+        });//update query
+    });//select query
+}
+
+function purchaseItem(itemObj, quantity, updateSalesFx) {
     con.query("UPDATE products SET ? WHERE ?",[
         {
-            stock_quantity: currentStock - quantity
+            stock_quantity: itemObj.stock_quantity - quantity
         },
         {
-            item_id: id
+            item_id: itemObj.item_id
         }
     ], function(err, res){
         if(err) throw err;
-        storeDB.listProducts(con, (res) => {
-            console.log("\nSuccessfully purchased (" + quantity.green + ") " + name.yellow + "!\n");
-            buyPrompt(res, "Buy something else?")
-        });
+        updateSalesFx(itemObj, quantity);
     });
 }
 
