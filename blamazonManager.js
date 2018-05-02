@@ -138,7 +138,7 @@ function newProduct(depts) {
                 type: 'input',
                 message: 'Enter Item Name:',
                 name: 'itemName',
-                validate: nonEmptyString
+                validate: storeDB.nonEmptyString
             },
             {
                 type: 'input',
@@ -177,14 +177,6 @@ function newProduct(depts) {
             });
         });//end new product details inquirer question
     });//end yes/no inquirer question
-}
-
-function nonEmptyString(str) {
-    if(str.length == 0) {
-        return false;
-    } else {
-        return true;
-    }
 }
 
 function removeProduct() {
