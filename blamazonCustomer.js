@@ -1,4 +1,5 @@
 const inq = require("inquirer");
+const clear = require('clear');
 const mysql = require("mysql");
 const colors = require("colors");
 const db = require("./db.js");
@@ -17,7 +18,7 @@ con.connect(function(err){
 
 //prompt for things to buy
 function buySomething(arr) {
-
+    
     let items = [];
     for(let i = 0; i < arr.length; i++) {
         items.push(arr[i].product_name);
@@ -46,7 +47,7 @@ function checkStock(itemArr, itemObj, quantity, purchaseFx) {
     con.query("SELECT stock_quantity FROM products WHERE item_id = ?", [itemObj.item_id], function(err, res) {
         if(err) throw err;
         let currentStock = res[0].stock_quantity;
-        if(currentStock < quantity) {
+        if((currentStock - quantity) < 0 || currentStock == 0) {
             console.log("\nNot enough stock!\n".red);
             buySomething(itemArr);
         } else {
@@ -73,7 +74,10 @@ function updateDeptSales(itemObj, amt) {
         function(err,res) {
             if(err) throw err;
             console.log("\nSuccessfully purchased (" + amt.green + ") " + colors.yellow(itemObj.product_name) + "!\n");
-            storeDB.listProducts(con, buyPrompt, "Buy Something Else?"); 
+            setTimeout( function() {
+                clear();
+                storeDB.listProducts(con, buyPrompt, "Buy Something Else?");
+            }, 2000);
         });//update query
     });//select query
 }
@@ -105,6 +109,7 @@ function buyPrompt(res, msg) {
             buySomething(res);
         } else {
             con.end();
+            clear();
             return console.log("\nThank you for your business!\n".rainbow);
         }
     });

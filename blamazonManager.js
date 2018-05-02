@@ -3,6 +3,7 @@ const mysql = require("mysql");
 const colors = require("colors");
 const db = require("./db.js");
 const storeDB = new db();
+const clear = require('clear');
 
 //get credentials
 let con = mysql.createConnection(storeDB.credentials());
@@ -23,6 +24,7 @@ const menuOp = {
 
 function mainMenu() {
     inq.prompt(menuOp).then(function(ans){
+        clear();
         switch(ans.choice) {
             case 'View Products for Sale':
                 storeDB.listProducts(con, mainMenu);

@@ -3,6 +3,7 @@ const mysql = require("mysql");
 const colors = require("colors");
 const db = require("./db.js");
 const {table} = require('table');
+const clear = require('clear');
 const storeDB = new db();
 
 //get credentials
@@ -20,6 +21,7 @@ function mainMenu() {
             message: 'Welcome to Blamazon Supervisor View'.magenta
         }
     ).then(function(ans){
+        clear();
         switch(ans.choice) {
             case "View Sales Data":
                 getSales();
@@ -96,6 +98,7 @@ function getSales() {
                 colors.cyan(res[i].product_sales)
             ];
             let profit = parseFloat(res[i].product_sales) - parseFloat(res[i].over_head_costs);
+            profit = profit.toFixed(2);
             if(profit > 0) {
                 profit = colors.green(profit);
             } else {
